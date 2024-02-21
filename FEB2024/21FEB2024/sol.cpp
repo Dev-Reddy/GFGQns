@@ -1,62 +1,58 @@
+#define ll long long
+int mod = 1000000007;
+
 class Solution
 {
 public:
-    int mod = 1003;
-    unordered_map<string, int> mp;
-    int solve(string s, int i, int j, bool isTrue)
+    int countWays(int n, string S)
     {
-        // base condition
-        if (i > j)
-            return 0;
-        if (i == j)
-        {
-            if (isTrue == true)
-                return s[i] == 'T';
-            else
-                return s[i] == 'F';
-        }
-        // checking in hashmap
-        string temp = to_string(i) + " " + to_string(j) + " " + to_string(isTrue);
-        if (mp.find(temp) != mp.end())
-            return mp[temp];
-        // looping
-        int ans = 0;
-        for (int k = i + 1; k < j; k = k + 2)
-        {
-            int lt = solve(s, i, k - 1, true);
-            int lf = solve(s, i, k - 1, false);
-            int rt = solve(s, k + 1, j, true);
-            int rf = solve(s, k + 1, j, false);
-            // if operator is |
-            if (s[k] == '|')
-            {
-                if (isTrue == true)
-                    ans = ans + lt * rt + lt * rf + lf * rt;
-                else
-                    ans = ans + lf * rf;
-            }
-            else if (s[k] == '^')
-            {
-                if (isTrue == true)
-                    ans = ans + lf * rt + lt * rf;
-                else
-                    ans = ans + lt * rt + lf * rf;
-            }
-            else if (s[k] == '&')
-            {
-                if (isTrue == true)
-                    ans = ans + lt * rt;
-                else
-                    ans = ans + lt * rf + lf * rt + lf * rf;
-            }
-        }
-        return mp[temp] = ans % mod;
-    }
+        vector<vector<vector<ll>>> dp(n, vector<vector<ll>>(n, vector<ll>(2, 0)));
 
-    int countWays(int N, string S)
-    {
-        // code here
-        mp.clear();
-        return solve(S, 0, N - 1, true) % mod;
+        for (int i = 0; i < n; i++)
+        {
+            dp[i][i][1] = (S[i] == 'T');
+            dp[i][i][0] = (S[i] == 'F');
+        }
+
+        for (int i = n - 1; i >= 0; i--)
+        {
+            for (int j = i + 1; j < n; j++)
+            {
+                for (int isTrue = 0; isTrue <= 1; isTrue++)
+                {
+                    ll ans = 0;
+                    for (int ind = i + 1; ind <= j - 1; ind = ind + 2)
+                    {
+                        ll LT = dp[i][ind - 1][1];
+                        ll LF = dp[i][ind - 1][0];
+                        ll RT = dp[ind + 1][j][1];
+                        ll RF = dp[ind + 1][j][0];
+                        if (S[ind] == '&')
+                        {
+                            if (isTrue)
+                                ans = (ans + (LT * RT) % mod) % mod;
+                            else
+                                ans = (ans + (LT * RF) % mod + (LF * RF) % mod + (LF * RT) % mod) % mod;
+                        }
+                        else if (S[ind] == '|')
+                        {
+                            if (isTrue)
+                                ans = (ans + (LT * RT) % mod + (LT * RF) % mod + (LF * RT) % mod) % mod;
+                            else
+                                ans = (ans + (LF * RF) % mod) % mod;
+                        }
+                        else
+                        {
+                            if (isTrue)
+                                ans = (ans + (LT * RF) % mod + (LF * RT) % mod) % mod;
+                            else
+                                ans = (ans + (LT * RT) % mod + (LF * RF) % mod) % mod;
+                        }
+                    }
+                    dp[i][j][isTrue] = ans % 1003;
+                }
+            }
+        }
+        return dp[0][n - 1][1];
     }
 };
